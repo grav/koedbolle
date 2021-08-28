@@ -15,8 +15,7 @@
 (defn koedbolle
   [{:keys [move?]}]
   (r/with-let [!state (r/atom 0)
-               files [
-                      "images/koedbolle2.png"
+               files ["images/koedbolle2.png"
                       "images/koedbolle3.png"]
                x (js/setInterval #(swap! !state inc) 200)]
     (let [image (if move?
@@ -31,6 +30,8 @@
 (def key-codes
   {:left-arrow 37
    :right-arrow 39})
+
+(defn gaffel [])
 
 (defn game []
   (r/with-let [!state (r/atom {:pos [20 0]
@@ -58,6 +59,8 @@
 
       [:div
        [:div
+        [gaffel]]
+       [:div
         {:style {:position :absolute
                  :left     (str x "vw")}}
         [koedbolle {:move? (or (contains? (:keys @!state) (key-codes :left-arrow))
@@ -67,8 +70,6 @@
       (js/clearInterval x)
       (js/window.removeEventListener "keydown" down-handler)
       (js/window.removeEventListener "keyup" up-handler))))
-
-
 
 (defn ^:dev/after-load main []
   (r/render [game] (js/document.getElementById "app")))
