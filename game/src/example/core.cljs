@@ -31,38 +31,61 @@
   {:left-arrow 37
    :right-arrow 39})
 
-(defn gaffel [])
+(defn gaffel []
+  (r/with-let [!state (r/atom 0)
+               height 484
+               x (js/setInterval (fn []
+                                   (let [p @!state]
+                                     (when (< p 100)
+                                       (swap! !state inc)))))]
+
+    (let [y (- 0 (* (- 1 (/ @!state 100)) height))]
+      [:div {:style {:position :relative
+                     :top (str y "px")}}
+       [:img {:src "images/gaffel.png"}]])
+    (finally
+      (js/clearInterval x))))
 
 (defn game []
   (r/with-let [!state (r/atom {:pos [20 0]
+                               :tick 0
                                :keys #{}})
                up-handler (fn [e] (swap! !state update :keys disj e.keyCode))
                down-handler (fn [e] (swap! !state update :keys conj e.keyCode))
                _ (js/window.addEventListener "keydown" down-handler)
                _ (js/window.addEventListener "keyup" up-handler)
                x (js/setInterval (fn []
-                                   (when (contains? (:keys @!state) (key-codes :left-arrow))
-                                     (swap! !state update :pos (fn [[x y]]
-                                                                 [(if (> x 0)
-                                                                    (dec x)
-                                                                    x)
-                                                                  y])))
-                                   (when (contains? (:keys @!state) (key-codes :right-arrow))
-                                     (swap! !state update :pos (fn [[x y]]
-                                                                 [(if (< x 100)
-                                                                    (inc x)
-                                                                    x)
-                                                                  y]))))
+                                   (let [{:keys [] :as state} @!state
+                                         new-state (cond-> state
+                                                           (contains? (:keys state) (key-codes :left-arrow))
+                                                           (update :pos (fn [[x y]]
+                                                                          [(if (> x 0)
+                                                                             (dec x)
+                                                                             x)
+                                                                           y]))
 
-                                 100)]
+                                                           (contains? (:keys state) (key-codes :right-arrow))
+                                                           (update :pos (fn [[x y]]
+                                                                          [(if (< x 100)
+                                                                             (inc x)
+                                                                             x)
+                                                                           y])))]
+
+
+                                     (reset! !state new-state)))
+
+                                 50)]
     (let [{[x y] :pos} @!state]
 
       [:div
        [:div
+        {:style {:position :absolute
+                 :left (str 10 "vw")}}
         [gaffel]]
        [:div
         {:style {:position :absolute
-                 :left     (str x "vw")}}
+                 :left     (str x "vw")
+                 :top 250}}
         [koedbolle {:move? (or (contains? (:keys @!state) (key-codes :left-arrow))
                                (contains? (:keys @!state) (key-codes :right-arrow)))}]]]
       #_[:div [:pre (pr-str @!state)]])
