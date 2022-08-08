@@ -31,20 +31,21 @@
   {:left-arrow 37
    :right-arrow 39})
 
-(defn gaffel []
+(defn gaffel-view [{:keys [x]}]
   (r/with-let [!state (r/atom 0)
                height 484
-               x (js/setInterval (fn []
-                                   (let [p @!state]
-                                     (when (< p 100)
-                                       (swap! !state inc)))))]
+               id (js/setInterval (fn []
+                                    (let [p @!state]
+                                      (when (< p 100)
+                                        (swap! !state inc)))))]
 
     (let [y (- 0 (* (- 1 (/ @!state 100)) height))]
       [:div {:style {:position :relative
-                     :top (str y "px")}}
+                     :top (str y "px")
+                     :left x}}
        [:img {:src "images/gaffel.png"}]])
     (finally
-      (js/clearInterval x))))
+      (js/clearInterval id))))
 
 (defn game []
   (r/with-let [!state (r/atom {:pos [20 0]
@@ -55,8 +56,9 @@
                _ (js/window.addEventListener "keydown" down-handler)
                _ (js/window.addEventListener "keyup" up-handler)
                x (js/setInterval (fn []
-                                   (let [{:keys [] :as state} @!state
-                                         new-state (cond-> state
+                                   (let [{:keys [tick] :as state} @!state
+                                         new-state (cond-> (update state :tick inc)
+
                                                            (contains? (:keys state) (key-codes :left-arrow))
                                                            (update :pos (fn [[x y]]
                                                                           [(if (> x 0)
@@ -69,19 +71,26 @@
                                                                           [(if (< x 100)
                                                                              (inc x)
                                                                              x)
-                                                                           y])))]
+                                                                           y]))
+
+                                                           (zero? (mod tick 100))
+                                                           (update :gaffel #(rand-int 1000))
+
+                                                           #_#_(not (zero? (mod tick 100)))
+                                                           (dissoc :gaffel))]
 
 
                                      (reset! !state new-state)))
 
                                  50)]
-    (let [{[x y] :pos} @!state]
+    (let [{[x y] :pos
+           :keys [gaffel]} @!state]
 
       [:div
        [:div
         {:style {:position :absolute
                  :left (str 10 "vw")}}
-        [gaffel]]
+        [gaffel-view {:x gaffel}]]
        [:div
         {:style {:position :absolute
                  :left     (str x "vw")
