@@ -55,38 +55,40 @@
                down-handler (fn [e] (swap! !state update :keys conj e.keyCode))
                _ (js/window.addEventListener "keydown" down-handler)
                _ (js/window.addEventListener "keyup" up-handler)
-               x (js/setInterval (fn []
-                                   (let [{:keys [tick] :as state} @!state
-                                         new-state (cond-> (update state :tick inc)
+               id (js/setInterval (fn []
+                                    (let [{:keys [tick] :as state} @!state
+                                          new-state (cond-> (update state :tick inc)
 
-                                                           (contains? (:keys state) (key-codes :left-arrow))
-                                                           (update :pos (fn [[x y]]
-                                                                          [(if (> x 0)
-                                                                             (dec x)
-                                                                             x)
-                                                                           y]))
+                                                            (contains? (:keys state) (key-codes :left-arrow))
+                                                            (update :pos (fn [[x y]]
+                                                                           [(if (> x 0)
+                                                                              (dec x)
+                                                                              x)
+                                                                            y]))
 
-                                                           (contains? (:keys state) (key-codes :right-arrow))
-                                                           (update :pos (fn [[x y]]
-                                                                          [(if (< x 100)
-                                                                             (inc x)
-                                                                             x)
-                                                                           y]))
+                                                            (contains? (:keys state) (key-codes :right-arrow))
+                                                            (update :pos (fn [[x y]]
+                                                                           [(if (< x 100)
+                                                                              (inc x)
+                                                                              x)
+                                                                            y]))
 
-                                                           (zero? (mod tick 100))
-                                                           (update :gaffel #(rand-int 1000))
+                                                            (zero? (mod tick 50))
+                                                            (update :gaffel #(rand-int 1000))
 
-                                                           #_#_(not (zero? (mod tick 100)))
-                                                           (dissoc :gaffel))]
+                                                            #_#_(not (zero? (mod tick 100)))
+                                                            (dissoc :gaffel))]
 
 
-                                     (reset! !state new-state)))
+                                      (reset! !state new-state)))
 
-                                 50)]
+                                  50)]
     (let [{[x y] :pos
-           :keys [gaffel]} @!state]
+           :keys [gaffel tick]} @!state]
 
       [:div
+       [:div
+        [:h1 (str "Tid: " (js/Math.floor (/ tick 20)) " sekunder")]]
        [:div
         {:style {:position :absolute
                  :left (str 10 "vw")}}
@@ -99,7 +101,7 @@
                                (contains? (:keys @!state) (key-codes :right-arrow)))}]]]
       #_[:div [:pre (pr-str @!state)]])
     (finally
-      (js/clearInterval x)
+      (js/clearInterval id)
       (js/window.removeEventListener "keydown" down-handler)
       (js/window.removeEventListener "keyup" up-handler))))
 
