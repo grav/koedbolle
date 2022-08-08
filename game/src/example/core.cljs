@@ -32,14 +32,17 @@
    :right-arrow 39})
 
 (defn gaffel-view [{:keys [x]}]
-  (r/with-let [!state (r/atom 0)
+  (r/with-let [!state (r/atom {:p 0 :last-x 0})
                height 484
                id (js/setInterval (fn []
-                                    (let [p @!state]
+                                    (let [{:keys [p]} @!state]
                                       (when (< p 100)
-                                        (swap! !state inc)))))]
-
-    (let [y (- 0 (* (- 1 (/ @!state 100)) height))]
+                                        (swap! !state update :p inc))))
+                                  10)]
+    (when (not= x (:last-x @!state))
+      (reset! !state {:last-x x
+                      :p 0}))
+    (let [y (- 0 (* (- 1 (/ (:p @!state) 100)) height))]
       [:div {:style {:position :relative
                      :top (str y "px")
                      :left x}}
@@ -96,7 +99,7 @@
        [:div
         {:style {:position :absolute
                  :left     (str x "vw")
-                 :top 250}}
+                 :top 400}}
         [koedbolle {:move? (or (contains? (:keys @!state) (key-codes :left-arrow))
                                (contains? (:keys @!state) (key-codes :right-arrow)))}]]]
       #_[:div [:pre (pr-str @!state)]])
